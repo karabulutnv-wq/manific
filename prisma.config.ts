@@ -8,6 +8,5 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["TURSO_DATABASE_URL"] ?? "",
-    token: process.env["TURSO_AUTH_TOKEN"],
   },
 });

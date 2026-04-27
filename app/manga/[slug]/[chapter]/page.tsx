@@ -24,7 +24,7 @@ export default async function ChapterPage({
   if (!currentChapter) notFound();
 
   const pages: string[] = JSON.parse(currentChapter.pages || "[]");
-  const currentIndex = manga.chapters.findIndex((c) => c.number === chapterNum);
+  const currentIndex = manga.chapters.findIndex((c: { number: number }) => c.number === chapterNum);
   const prevChapter = manga.chapters[currentIndex - 1];
   const nextChapter = manga.chapters[currentIndex + 1];
 
