@@ -104,7 +104,7 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ sl
             <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>Henüz bölüm eklenmemiş.</p>
           ) : (
             <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-              {manga.chapters.map((ch) => (
+              {manga.chapters.map((ch: { id: number; number: number; title: string | null; createdAt: Date }) => (
                 <Link
                   key={ch.id}
                   href={`/manga/${slug}/${ch.number}`}
