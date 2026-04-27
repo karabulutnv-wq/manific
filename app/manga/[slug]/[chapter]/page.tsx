@@ -20,7 +20,7 @@ export default async function ChapterPage({
 
   if (!manga) notFound();
 
-  const currentChapter = manga.chapters.find((c) => c.number === chapterNum);
+  const currentChapter = manga.chapters.find((c: { number: number }) => c.number === chapterNum);
   if (!currentChapter) notFound();
 
   const pages: string[] = JSON.parse(currentChapter.pages || "[]");
