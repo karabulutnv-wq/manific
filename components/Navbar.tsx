@@ -91,17 +91,16 @@ export default function Navbar() {
                     borderRadius: 12, padding: "6px 0", zIndex: 50,
                     boxShadow: "0 20px 50px rgba(0,0,0,0.7)",
                   }}>
-                    {user?.role === "admin" ? (
+                    {user?.role === "admin" && (
                       <Link href="/admin" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", fontSize: 13, color: "var(--text)", textDecoration: "none" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)") }
-                        onMouseLeave={e => (e.currentTarget.style.background = "transparent") }
+                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
                       >⚙️ Admin Panel</Link>
-                    ) : (
-                      <Link href="/profil" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", fontSize: 13, color: "var(--text)", textDecoration: "none" }}
-                        onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)") }
-                        onMouseLeave={e => (e.currentTarget.style.background = "transparent") }
-                      >👤 Profilim</Link>
                     )}
+                    <Link href="/profil" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", fontSize: 13, color: "var(--text)", textDecoration: "none" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >👤 Profilim</Link>
                     <div style={{ borderTop: "1px solid var(--border)", margin: "4px 12px" }} />
                     <button
                       onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}

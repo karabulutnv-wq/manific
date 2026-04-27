@@ -23,7 +23,6 @@ export default function ProfilPage() {
 
   useEffect(() => {
     if (!session) { router.push("/giris"); return; }
-    if (user?.role === "admin") { router.push("/admin"); return; }
     loadProfiles();
     fetch("/api/avatars").then(r => r.json()).then(setAvatars);
   }, [session]);
