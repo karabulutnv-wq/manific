@@ -1,24 +1,26 @@
+// Run locally after setting TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in .env
+// node prisma/seed.js
 const { PrismaClient } = require("@prisma/client");
-const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
+const { PrismaLibSQL } = require("@prisma/adapter-libsql");
+const { createClient } = require("@libsql/client");
 const bcrypt = require("bcryptjs");
+require("dotenv").config();
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const libsql = createClient({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
+const adapter = new PrismaLibSQL(libsql);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const hashed = await bcrypt.hash("admin123", 10);
-  await prisma.user.upsert({
-    where: { email: "admin@manga.com" },
+  await prisma.siteUser.upsert({
+    where: { email: "test@test.com" },
     update: {},
-    create: {
-      email: "admin@manga.com",
-      password: hashed,
-      role: "admin",
-    },
+    create: { username: "testuser", email: "test@test.com", password: hashed },
   });
-  console.log("Admin user created: admin@manga.com / admin123");
+  console.log("Done");
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+main().catch(console.error).finally(() => prisma.$disconnect());
