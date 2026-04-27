@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("TURSO_DATABASE_URL")
+}
+
+model Manga {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  description String?
+  cover       String?
+  genre       String?
+  status      String    @default("ongoing")
+  author      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  chapters    Chapter[]
+}
+
+model Chapter {
+  id        Int      @id @default(autoincrement())
+  mangaId   Int
+  number    Float
+  title     String?
+  pages     String
+  createdAt DateTime @default(now())
+  manga     Manga    @relation(fields: [mangaId], references: [id], onDelete: Cascade)
+}
+
+model SiteUser {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+}
+
+model Avatar {
+  id        Int      @id @default(autoincrement())
+  url       String
+  name      String?
+  createdAt DateTime @default(now())
+}
