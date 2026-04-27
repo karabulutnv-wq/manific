@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import ChapterReader from "@/components/ChapterReader";
+import Comments from "@/components/Comments";
 
 export const dynamic = "force-dynamic";
 
@@ -29,64 +30,61 @@ export default async function ChapterPage({
   const nextChapter = manga.chapters[currentIndex + 1];
 
   return (
-    <div>
+    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
       {/* Top nav */}
-      <div
-        className="sticky top-14 z-40 flex items-center justify-between px-4 py-2 text-sm"
-        style={{ background: "var(--surface)", borderBottom: "1px solid var(--border)" }}
-      >
-        <Link href={`/manga/${slug}`} className="hover:opacity-80">
-          ← {manga.title}
+      <div style={{
+        position: "sticky", top: 60, zIndex: 40,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "10px 20px", fontSize: 13,
+        background: "rgba(14,14,28,0.95)", backdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <Link href={`/manga/${slug}`} style={{ color: "var(--text2)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+          <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {manga.title}
         </Link>
-        <span className="font-medium">
+        <span style={{ fontWeight: 600 }}>
           Bölüm {currentChapter.number}
-          {currentChapter.title ? ` - ${currentChapter.title}` : ""}
+          {currentChapter.title ? ` — ${currentChapter.title}` : ""}
         </span>
-        <div className="flex gap-2">
+        <div style={{ display: "flex", gap: 8 }}>
           {prevChapter && (
-            <Link
-              href={`/manga/${slug}/${prevChapter.number}`}
-              className="px-3 py-1 rounded text-xs"
-              style={{ background: "var(--border)" }}
-            >
+            <Link href={`/manga/${slug}/${prevChapter.number}`} className="btn-ghost" style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, textDecoration: "none" }}>
               ← Önceki
             </Link>
           )}
           {nextChapter && (
-            <Link
-              href={`/manga/${slug}/${nextChapter.number}`}
-              className="px-3 py-1 rounded text-xs"
-              style={{ background: "var(--accent)", color: "#fff" }}
-            >
+            <Link href={`/manga/${slug}/${nextChapter.number}`} className="btn-purple" style={{ padding: "5px 12px", borderRadius: 8, fontSize: 12, textDecoration: "none" }}>
               Sonraki →
             </Link>
           )}
         </div>
       </div>
 
+      {/* Pages */}
       <ChapterReader pages={pages} />
 
       {/* Bottom nav */}
-      <div className="flex justify-center gap-4 py-8">
+      <div style={{ display: "flex", justifyContent: "center", gap: 12, padding: "24px 20px" }}>
         {prevChapter && (
-          <Link
-            href={`/manga/${slug}/${prevChapter.number}`}
-            className="px-6 py-2 rounded"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-          >
+          <Link href={`/manga/${slug}/${prevChapter.number}`} className="btn-ghost" style={{ padding: "10px 24px", borderRadius: 10, fontSize: 13, textDecoration: "none" }}>
             ← Önceki Bölüm
           </Link>
         )}
         {nextChapter && (
-          <Link
-            href={`/manga/${slug}/${nextChapter.number}`}
-            className="px-6 py-2 rounded"
-            style={{ background: "var(--accent)", color: "#fff" }}
-          >
+          <Link href={`/manga/${slug}/${nextChapter.number}`} className="btn-purple" style={{ padding: "10px 24px", borderRadius: 10, fontSize: 13, textDecoration: "none" }}>
             Sonraki Bölüm →
           </Link>
         )}
       </div>
+
+      {/* Divider */}
+      <div style={{ borderTop: "1px solid var(--border)", margin: "0 20px" }} />
+
+      {/* Comments */}
+      <Comments chapterId={currentChapter.id} />
     </div>
   );
 }
