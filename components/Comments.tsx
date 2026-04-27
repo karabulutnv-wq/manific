@@ -77,7 +77,7 @@ export default function Comments({ chapterId }: { chapterId: number }) {
       </div>
 
       {/* Input */}
-      {session && user?.role !== "admin" ? (
+      {session ? (
         <form onSubmit={handleSubmit} style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid var(--border2)", background: "var(--card2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "var(--accent3)" }}>

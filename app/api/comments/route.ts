@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Giriş yapman gerekiyor" }, { status: 401 });
 
   const user = session.user as { id?: string; username?: string; name?: string; avatar?: string; role?: string };
-  if (user.role === "admin") return NextResponse.json({ error: "Admin yorum yapamaz" }, { status: 403 });
+  // Admin de yorum yapabilir
 
   const { chapterId, content } = await req.json();
   if (!chapterId || !content?.trim()) {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     data: {
       chapterId: Number(chapterId),
       userId: Number(user.id),
-      username: user.username || user.name || "Kullanıcı",
+      username: user.username || user.name || "Admin",
       avatar: user.avatar || null,
       content: content.trim(),
     },
