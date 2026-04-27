@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ChapterReader from "@/components/ChapterReader";
 import Comments from "@/components/Comments";
+import { ReadLimitBlocker } from "@/components/ReadLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export default async function ChapterPage({
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
+      <ReadLimitBlocker chapterId={currentChapter.id} />
       {/* Top nav */}
       <div style={{
         position: "sticky", top: 60, zIndex: 40,
