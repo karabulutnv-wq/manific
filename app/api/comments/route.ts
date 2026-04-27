@@ -26,12 +26,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Yorum boş olamaz" }, { status: 400 });
   }
 
+  // Aktif profil avatarını kullan
+  let avatarToUse = user.avatar || null;
+  if (user.id && user.role !== "admin") {
+    const activeProfile = await prisma.profile.findFirst({
+      where: { userId: Number(user.id), isActive: true },
+    });
+    if (activeProfile?.avatar) avatarToUse = activeProfile.avatar;
+  }
+
   const comment = await prisma.comment.create({
     data: {
       chapterId: Number(chapterId),
-      userId: Number(user.id),
+      userId: user.role === "admin" ? 0 : Number(user.id),
       username: user.username || user.name || "Admin",
-      avatar: user.avatar || null,
+      avatar: avatarToUse,
       content: content.trim(),
     },
   });
