@@ -19,9 +19,11 @@ export async function POST(req: NextRequest) {
 
   if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
 
+  // Process max 10 files per request to avoid Vercel 4.5MB limit
+  const batch = files.slice(0, 10);
   const urls: string[] = [];
 
-  for (const file of files) {
+  for (const file of batch) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 

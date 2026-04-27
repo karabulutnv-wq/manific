@@ -30,10 +30,22 @@ export default function ChaptersPage() {
     e.preventDefault();
     if (!sel || !num || !pages.length) return;
     setLoading(true); setProgress("Sayfalar yükleniyor...");
-    const fd = new FormData(); pages.forEach(f => fd.append("files", f)); fd.append("folder", `chapters/${sel.slug}/${num}`);
-    const { urls } = await (await fetch("/api/upload", { method: "POST", body: fd })).json();
+
+    // Upload in chunks of 10 to avoid Vercel 4.5MB limit
+    const allUrls: string[] = [];
+    const chunkSize = 10;
+    for (let i = 0; i < pages.length; i += chunkSize) {
+      const chunk = pages.slice(i, i + chunkSize);
+      setProgress(`Sayfalar yükleniyor... (${Math.min(i + chunkSize, pages.length)}/${pages.length})`);
+      const fd = new FormData();
+      chunk.forEach(f => fd.append("files", f));
+      fd.append("folder", `chapters/${sel.slug}/${num}`);
+      const { urls } = await (await fetch("/api/upload", { method: "POST", body: fd })).json();
+      allUrls.push(...urls);
+    }
+
     setProgress("Bölüm kaydediliyor...");
-    await fetch("/api/chapters", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mangaId: sel.id, number: parseFloat(num), title: title || undefined, pages: urls }) });
+    await fetch("/api/chapters", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mangaId: sel.id, number: parseFloat(num), title: title || undefined, pages: allUrls }) });
     setNum(""); setTitle(""); setPages([]); setProgress(""); setLoading(false); loadChapters(sel);
   }
 
