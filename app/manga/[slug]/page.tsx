@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import ChapterList from "@/components/ChapterList";
 
 export const dynamic = "force-dynamic";
 
@@ -90,45 +91,7 @@ export default async function MangaDetailPage({ params }: { params: Promise<{ sl
         </div>
 
         {/* Chapter list */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-          <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
-            <div className="section-title">
-              <h2 className="font-bold">Bölümler</h2>
-              <span className="text-xs px-2 py-0.5 rounded-full ml-1" style={{ background: "var(--surface2)", color: "var(--muted)" }}>
-                {manga.chapters.length}
-              </span>
-            </div>
-          </div>
-
-          {manga.chapters.length === 0 ? (
-            <p className="text-sm text-center py-10" style={{ color: "var(--muted)" }}>Henüz bölüm eklenmemiş.</p>
-          ) : (
-            <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-              {manga.chapters.map((ch: { id: number; number: number; title: string | null; createdAt: Date }) => (
-                <Link
-                  key={ch.id}
-                  href={`/manga/${slug}/${ch.number}`}
-                  className="flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-white/3 group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "var(--surface2)", color: "var(--accent3)" }}
-                    >
-                      {ch.number}
-                    </span>
-                    <span className="text-sm font-medium group-hover:text-purple-400 transition-colors">
-                      {ch.title || `Bölüm ${ch.number}`}
-                    </span>
-                  </div>
-                  <span className="text-xs flex-shrink-0" style={{ color: "var(--muted)" }}>
-                    {new Date(ch.createdAt).toLocaleDateString("tr-TR")}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <ChapterList chapters={manga.chapters} slug={slug} />
       </div>
     </div>
   );
