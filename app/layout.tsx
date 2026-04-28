@@ -7,6 +7,10 @@ import { ReadLimitWidget } from "@/components/ReadLimit";
 export const metadata: Metadata = {
   title: "MANIFIC — Türkçe Manga Okuma Sitesi",
   description: "En güncel mangaları ücretsiz oku",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
