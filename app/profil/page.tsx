@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 interface Profile { id: number; name: string; avatar?: string | null; isActive: boolean; }
 interface Avatar { id: number; url: string; name?: string; }
 
+type View = "select" | "avatarPicker";
+
 export default function ProfilPage() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
@@ -14,10 +16,11 @@ export default function ProfilPage() {
 
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [avatars, setAvatars] = useState<Avatar[]>([]);
-  const [newName, setNewName] = useState("");
-  const [adding, setAdding] = useState(false);
+  const [view, setView] = useState<View>("select");
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [addingNew, setAddingNew] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -32,18 +35,33 @@ export default function ProfilPage() {
     setProfiles(await r.json());
   }
 
-  async function addProfile(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName.trim()) return;
-    setAdding(true);
+  async function addProfile() {
+    if (!newProfileName.trim()) return;
+    setSaving(true);
     const r = await fetch("/api/profiles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName.trim() }),
+      body: JSON.stringify({ name: newProfileName.trim() }),
     });
     const d = await r.json();
-    if (!r.ok) { setMsg(d.error); } else { setNewName(""); loadProfiles(); }
-    setAdding(false);
+    if (!r.ok) { setMsg(d.error); } else { setNewProfileName(""); setAddingNew(false); loadProfiles(); }
+    setSaving(false);
+  }
+
+  async function setActive(id: number) {
+    await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, setActive: true }) });
+    await updateSession();
+    loadProfiles();
+  }
+
+  async function saveAvatar(profileId: number, avatarUrl: string) {
+    setSaving(true);
+    await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: profileId, avatar: avatarUrl }) });
+    await updateSession();
+    loadProfiles();
+    setView("select");
+    setEditingProfile(null);
+    setSaving(false);
   }
 
   async function deleteProfile(id: number) {
@@ -52,202 +70,196 @@ export default function ProfilPage() {
     loadProfiles();
   }
 
-  async function setActive(id: number) {
-    await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, setActive: true }) });
-    await updateSession();
-    loadProfiles();
-    setMsg("Aktif profil değiştirildi!");
-    setTimeout(() => setMsg(""), 2000);
-  }
-
-  async function saveAvatar(profileId: number, avatarUrl: string) {
-    setSaving(true);
-    await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: profileId, avatar: avatarUrl }) });
-    await updateSession();
-    loadProfiles();
-    setShowAvatarPicker(false);
-    setEditingProfile(null);
-    setSaving(false);
-    setMsg("Avatar güncellendi!");
-    setTimeout(() => setMsg(""), 2000);
+  async function renameProfile(id: number) {
+    if (!newName.trim()) return;
+    await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, name: newName.trim() }) });
+    setNewName(""); setEditingProfile(null); loadProfiles();
   }
 
   if (!session) return null;
 
-  const activeProfile = profiles.find(p => p.isActive);
+  // Avatar picker view
+  if (view === "avatarPicker" && editingProfile) {
+    return (
+      <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <h2 style={{ fontWeight: 900, fontSize: 22, marginBottom: 6 }}>{editingProfile.name}</h2>
+        <p style={{ fontSize: 14, color: "var(--text2)", marginBottom: 32 }}>Avatar seç</p>
 
-  return (
-    <div style={{ background: "var(--bg)", minHeight: "100vh" }}>
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "40px 20px 60px" }}>
-
-        {/* User header */}
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px", marginBottom: 24, display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, overflow: "hidden", flexShrink: 0, border: "2px solid var(--accent2)", position: "relative", background: "var(--card2)" }}>
-            {activeProfile?.avatar || user?.avatar ? (
-              <Image src={activeProfile?.avatar || user?.avatar || ""} alt="avatar" fill style={{ objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 900, background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "#fff" }}>
-                {(user?.username || "?")[0].toUpperCase()}
-              </div>
-            )}
+        {avatars.length === 0 ? (
+          <div style={{ textAlign: "center", color: "var(--muted)" }}>
+            <p style={{ fontSize: 36, marginBottom: 12 }}>🖼️</p>
+            <p>Admin henüz avatar eklememiş</p>
           </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontWeight: 800, fontSize: 18 }}>{user?.username}</p>
-            {activeProfile && <p style={{ fontSize: 12, color: "var(--accent3)", marginTop: 2 }}>Aktif: {activeProfile.name}</p>}
-          </div>
-          <button onClick={() => signOut({ callbackUrl: "/" })} style={{ padding: "8px 16px", borderRadius: 10, fontSize: 12, background: "rgba(239,68,68,0.08)", color: "var(--red)", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer" }}>
-            Çıkış
-          </button>
-        </div>
-
-        {msg && (
-          <div style={{ padding: "10px 16px", borderRadius: 10, background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: 13, marginBottom: 16 }}>
-            ✓ {msg}
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))", gap: 16, maxWidth: 600, width: "100%" }}>
+            {avatars.map(av => (
+              <button
+                key={av.id}
+                onClick={() => saveAvatar(editingProfile.id, av.url)}
+                disabled={saving}
+                style={{
+                  position: "relative", aspectRatio: "1", borderRadius: 14, overflow: "hidden",
+                  border: editingProfile.avatar === av.url ? "3px solid var(--accent2)" : "2px solid var(--border)",
+                  cursor: "pointer", background: "var(--card2)", padding: 0,
+                  transform: editingProfile.avatar === av.url ? "scale(1.05)" : "scale(1)",
+                  transition: "all 0.2s",
+                }}
+              >
+                <Image src={av.url} alt="avatar" fill style={{ objectFit: "cover" }} />
+                {editingProfile.avatar === av.url && (
+                  <div style={{ position: "absolute", inset: 0, background: "rgba(124,58,237,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg style={{ width: 24, height: 24, color: "#fff" }} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Profiles */}
-        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-            <div>
-              <h2 style={{ fontWeight: 800, fontSize: 16 }}>Profiller</h2>
-              <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>{profiles.length}/4 profil</p>
-            </div>
-          </div>
-
-          {/* Profile grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-            {profiles.map(p => (
-              <div key={p.id} style={{ textAlign: "center" }}>
-                {/* Avatar */}
-                <div
-                  onClick={() => setActive(p.id)}
-                  style={{
-                    width: "100%", aspectRatio: "1", borderRadius: 14, overflow: "hidden",
-                    border: p.isActive ? "3px solid var(--accent2)" : "2px solid var(--border)",
-                    boxShadow: p.isActive ? "0 0 16px var(--glow)" : "none",
-                    cursor: "pointer", position: "relative", background: "var(--card2)",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {p.avatar ? (
-                    <Image src={p.avatar} alt={p.name} fill style={{ objectFit: "cover" }} />
-                  ) : (
-                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, fontWeight: 900, background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "#fff" }}>
-                      {p.name[0].toUpperCase()}
-                    </div>
-                  )}
-                  {p.isActive && (
-                    <div style={{ position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: "50%", background: "var(--green)", border: "2px solid var(--card)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg style={{ width: 10, height: 10, color: "#fff" }} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                <p style={{ fontSize: 12, fontWeight: 600, marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</p>
-
-                {/* Actions */}
-                <div style={{ display: "flex", gap: 4, marginTop: 6, justifyContent: "center" }}>
-                  <button
-                    onClick={() => { setEditingProfile(p); setShowAvatarPicker(true); }}
-                    style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "var(--card2)", border: "1px solid var(--border2)", color: "var(--text2)", cursor: "pointer" }}
-                  >
-                    Fotoğraf
-                  </button>
-                  <button
-                    onClick={() => deleteProfile(p.id)}
-                    style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--red)", cursor: "pointer" }}
-                  >
-                    Sil
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {/* Add profile slot */}
-            {profiles.length < 4 && (
-              <div style={{ textAlign: "center" }}>
-                <div style={{ width: "100%", aspectRatio: "1", borderRadius: 14, border: "2px dashed var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: "var(--muted)", cursor: "pointer", background: "var(--card2)" }}
-                  onClick={() => document.getElementById("new-profile-input")?.focus()}
-                >
-                  +
-                </div>
-                <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 6 }}>Yeni Profil</p>
-              </div>
-            )}
-          </div>
-
-          {/* Add profile form */}
-          {profiles.length < 4 && (
-            <form onSubmit={addProfile} style={{ display: "flex", gap: 8 }}>
-              <input
-                id="new-profile-input"
-                placeholder="Profil adı..."
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                style={{ flex: 1, background: "var(--card2)", border: "1px solid var(--border2)", color: "var(--text)", outline: "none", borderRadius: 10, padding: "9px 14px", fontSize: 13 }}
-                onFocus={e => (e.target.style.borderColor = "var(--accent3)")}
-                onBlur={e => (e.target.style.borderColor = "var(--border2)")}
-              />
-              <button type="submit" disabled={adding || !newName.trim()} className="btn-purple" style={{ padding: "9px 20px", borderRadius: 10, fontSize: 13 }}>
-                {adding ? "..." : "Ekle"}
-              </button>
-            </form>
-          )}
-        </div>
-
-        <p style={{ fontSize: 12, color: "var(--muted)", textAlign: "center" }}>
-          Bir profile tıklayarak aktif profili değiştirebilirsin. Aktif profilin avatarı yorumlarda ve her yerde görünür.
-        </p>
-      </div>
-
-      {/* Avatar picker modal */}
-      {showAvatarPicker && editingProfile && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
-          onClick={() => setShowAvatarPicker(false)}
+        <button
+          onClick={() => { setView("select"); setEditingProfile(null); }}
+          style={{ marginTop: 32, padding: "10px 28px", borderRadius: 12, background: "var(--card2)", border: "1px solid var(--border2)", color: "var(--text2)", cursor: "pointer", fontSize: 14 }}
         >
-          <div style={{ background: "var(--card)", border: "1px solid var(--border2)", borderRadius: 20, padding: 28, maxWidth: 480, width: "100%", maxHeight: "80vh", overflowY: "auto" }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <h3 style={{ fontWeight: 800, fontSize: 16 }}>{editingProfile.name} — Avatar Seç</h3>
-              <button onClick={() => setShowAvatarPicker(false)} style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 20 }}>✕</button>
-            </div>
+          ← Geri
+        </button>
+      </div>
+    );
+  }
 
-            {avatars.length === 0 ? (
-              <p style={{ textAlign: "center", color: "var(--muted)", fontSize: 13, padding: "32px 0" }}>Admin henüz avatar eklememiş</p>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-                {avatars.map(av => (
-                  <button
-                    key={av.id}
-                    onClick={() => saveAvatar(editingProfile.id, av.url)}
-                    disabled={saving}
-                    style={{
-                      aspectRatio: "1", borderRadius: 12, overflow: "hidden", position: "relative",
-                      border: editingProfile.avatar === av.url ? "3px solid var(--accent2)" : "2px solid var(--border)",
-                      cursor: "pointer", background: "var(--card2)", padding: 0,
-                      transform: editingProfile.avatar === av.url ? "scale(1.05)" : "scale(1)",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <Image src={av.url} alt="avatar" fill style={{ objectFit: "cover" }} />
-                    {editingProfile.avatar === av.url && (
-                      <div style={{ position: "absolute", inset: 0, background: "rgba(124,58,237,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <svg style={{ width: 20, height: 20, color: "#fff" }} fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+  // Main profile select view
+  return (
+    <div style={{ background: "var(--bg)", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <h1 style={{ fontWeight: 900, fontSize: 28, marginBottom: 8 }}>Kim Okuyor?</h1>
+      <p style={{ fontSize: 14, color: "var(--text2)", marginBottom: 48 }}>Profilini seç veya düzenle</p>
+
+      {msg && (
+        <div style={{ marginBottom: 20, padding: "8px 16px", borderRadius: 10, background: "rgba(239,68,68,0.1)", color: "var(--red)", fontSize: 13, border: "1px solid rgba(239,68,68,0.2)" }}>
+          {msg}
         </div>
       )}
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 28, justifyContent: "center", maxWidth: 600 }}>
+        {profiles.map(p => (
+          <div key={p.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            {/* Avatar */}
+            <button
+              onClick={() => setActive(p.id)}
+              style={{
+                width: 100, height: 100, borderRadius: 16, overflow: "hidden", position: "relative",
+                border: p.isActive ? "3px solid var(--accent2)" : "2px solid var(--border2)",
+                boxShadow: p.isActive ? "0 0 20px var(--glow)" : "none",
+                cursor: "pointer", background: "var(--card2)", padding: 0,
+                transition: "all 0.2s",
+              }}
+            >
+              {p.avatar ? (
+                <Image src={p.avatar} alt={p.name} fill style={{ objectFit: "cover" }} />
+              ) : (
+                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 900, background: "linear-gradient(135deg, var(--accent), var(--accent2))", color: "#fff" }}>
+                  {p.name[0].toUpperCase()}
+                </div>
+              )}
+              {p.isActive && (
+                <div style={{ position: "absolute", bottom: 4, right: 4, width: 20, height: 20, borderRadius: "50%", background: "var(--green)", border: "2px solid var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg style={{ width: 11, height: 11, color: "#fff" }} fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </button>
+
+            {/* Name — click to rename */}
+            {editingProfile?.id === p.id && !view.startsWith("avatar") ? (
+              <div style={{ display: "flex", gap: 4 }}>
+                <input
+                  value={newName}
+                  onChange={e => setNewName(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && renameProfile(p.id)}
+                  autoFocus
+                  style={{ width: 80, background: "var(--card2)", border: "1px solid var(--accent3)", color: "var(--text)", outline: "none", borderRadius: 6, padding: "3px 8px", fontSize: 12, textAlign: "center" }}
+                />
+                <button onClick={() => renameProfile(p.id)} style={{ background: "var(--accent)", border: "none", borderRadius: 6, color: "#fff", cursor: "pointer", padding: "3px 8px", fontSize: 11 }}>✓</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setEditingProfile(p); setNewName(p.name); }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--text)", padding: 0 }}
+              >
+                {p.name}
+              </button>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: 6 }}>
+              <button
+                onClick={() => { setEditingProfile(p); setView("avatarPicker"); }}
+                style={{ fontSize: 10, padding: "3px 10px", borderRadius: 6, background: "transparent", border: "1px solid var(--border2)", color: "var(--accent3)", cursor: "pointer" }}
+              >
+                ✏️ Avatar Değiştir
+              </button>
+              <button
+                onClick={() => deleteProfile(p.id)}
+                style={{ fontSize: 10, padding: "3px 8px", borderRadius: 6, background: "transparent", border: "1px solid rgba(239,68,68,0.3)", color: "var(--red)", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        ))}
+
+        {/* Add profile slot */}
+        {profiles.length < 4 && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            {addingNew ? (
+              <>
+                <div style={{ width: 100, height: 100, borderRadius: 16, border: "2px dashed var(--accent3)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card2)" }}>
+                  <span style={{ fontSize: 36, color: "var(--accent3)" }}>+</span>
+                </div>
+                <input
+                  placeholder="İsim gir..."
+                  value={newProfileName}
+                  onChange={e => setNewProfileName(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addProfile()}
+                  autoFocus
+                  style={{ width: 100, background: "var(--card2)", border: "1px solid var(--accent3)", color: "var(--text)", outline: "none", borderRadius: 8, padding: "5px 8px", fontSize: 12, textAlign: "center" }}
+                />
+                <div style={{ display: "flex", gap: 4 }}>
+                  <button onClick={addProfile} disabled={saving || !newProfileName.trim()} style={{ fontSize: 11, padding: "4px 12px", borderRadius: 6, background: "var(--accent)", border: "none", color: "#fff", cursor: "pointer" }}>
+                    {saving ? "..." : "Ekle"}
+                  </button>
+                  <button onClick={() => { setAddingNew(false); setNewProfileName(""); }} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, background: "var(--card2)", border: "1px solid var(--border2)", color: "var(--text2)", cursor: "pointer" }}>
+                    İptal
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setAddingNew(true)}
+                  style={{ width: 100, height: 100, borderRadius: 16, border: "2px dashed var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--card2)", cursor: "pointer", fontSize: 36, color: "var(--muted)", transition: "all 0.2s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--accent3)"; (e.currentTarget as HTMLElement).style.color = "var(--accent3)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border2)"; (e.currentTarget as HTMLElement).style.color = "var(--muted)"; }}
+                >
+                  +
+                </button>
+                <span style={{ fontSize: 13, color: "var(--muted)" }}>Profil Ekle</span>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom actions */}
+      <div style={{ display: "flex", gap: 12, marginTop: 48 }}>
+        <button onClick={() => router.push("/")} style={{ padding: "9px 24px", borderRadius: 12, background: "var(--card2)", border: "1px solid var(--border2)", color: "var(--text2)", cursor: "pointer", fontSize: 13 }}>
+          Ana Sayfaya Dön
+        </button>
+        <button onClick={() => signOut({ callbackUrl: "/" })} style={{ padding: "9px 24px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "var(--red)", cursor: "pointer", fontSize: 13 }}>
+          Çıkış Yap
+        </button>
+      </div>
     </div>
   );
 }
