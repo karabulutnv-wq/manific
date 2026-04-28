@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
 import { ReadLimitWidget } from "@/components/ReadLimit";
+import VisitTracker from "@/components/VisitTracker";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="https://pl29285114.profitablecpmratenetwork.com/7d/97/e6/7d97e61cf3d84ff9ce9a9d7286cd3337.js" strategy="afterInteractive" />
         <SessionWrapper>
           <Navbar />
+          <VisitTracker />
           <main>{children}</main>
           <ReadLimitWidget />
           <footer style={{ borderTop: "1px solid var(--border)", background: "var(--nav)", marginTop: 0 }}>

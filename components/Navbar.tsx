@@ -37,6 +37,7 @@ export default function Navbar() {
         <div style={{ display: "flex", gap: 2, marginLeft: 8 }} className="hidden md:flex">
           <Link href="/" className="nav-link">Ana Sayfa</Link>
           <Link href="/?filter=popular" className="nav-link">Keşfet</Link>
+          <Link href="/istekler" className="nav-link">İstekler</Link>
         </div>
 
         {/* Search */}
