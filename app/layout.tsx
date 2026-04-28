@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SessionWrapper from "@/components/SessionWrapper";
 import { ReadLimitWidget } from "@/components/ReadLimit";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "MANIFIC — Türkçe Manga Okuma Sitesi",
@@ -15,8 +16,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
       <body>
+        <Script src="https://pl29285113.profitablecpmratenetwork.com/b0/a8/2e/b0a82e11a4264a4fa275704394902db0.js" strategy="afterInteractive" />
+        <Script src="https://pl29285114.profitablecpmratenetwork.com/7d/97/e6/7d97e61cf3d84ff9ce9a9d7286cd3337.js" strategy="afterInteractive" />
         <SessionWrapper>
           <Navbar />
           <main>{children}</main>
