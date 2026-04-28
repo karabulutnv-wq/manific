@@ -10,7 +10,9 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  const user = session?.user as { role?: string; avatar?: string; username?: string; name?: string } | undefined;
+  const user = session?.user as { role?: string; avatar?: string; username?: string; name?: string; activeProfileName?: string } | undefined;
+
+  const displayName = user?.activeProfileName || user?.username || user?.name || "?";
 
   return (
     <nav style={{
@@ -73,11 +75,11 @@ export default function Navbar() {
                     <Image src={user.avatar} alt="av" width={32} height={32} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: "100%", height: "100%", background: "var(--card2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "var(--accent3)" }}>
-                      {(user?.username || user?.name || "?")[0].toUpperCase()}
+                      {displayName[0].toUpperCase()}
                     </div>
                   )}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 500 }} className="hidden sm:block">{user?.username || user?.name}</span>
+                <span style={{ fontSize: 13, fontWeight: 500 }} className="hidden sm:block">{displayName}</span>
                 <svg style={{ width: 12, height: 12, color: "var(--muted)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>

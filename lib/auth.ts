@@ -44,11 +44,17 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = (user as { role?: string }).role;
         token.avatar = (user as { avatar?: string }).avatar;
         token.username = user.name;
+      }
+      // session.update() çağrıldığında token'ı güncelle
+      if (trigger === "update" && session) {
+        if (session.avatar !== undefined) token.avatar = session.avatar;
+        if (session.username !== undefined) token.username = session.username;
+        if (session.activeProfileName !== undefined) token.activeProfileName = session.activeProfileName;
       }
       return token;
     },
@@ -58,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { avatar?: string }).avatar = token.avatar as string;
         (session.user as { username?: string }).username = token.username as string;
         (session.user as { id?: string }).id = token.sub as string;
+        (session.user as { activeProfileName?: string }).activeProfileName = token.activeProfileName as string;
       }
       return session;
     },

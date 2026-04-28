@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Giriş yapman gerekiyor" }, { status: 401 });
 
-  const user = session.user as { id?: string; username?: string; name?: string; avatar?: string; role?: string };
+  const user = session.user as { id?: string; username?: string; name?: string; avatar?: string; role?: string; activeProfileName?: string };
   // Admin de yorum yapabilir
 
   const { chapterId, content } = await req.json();
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     data: {
       chapterId: Number(chapterId),
       userId: user.role === "admin" ? 0 : Number(user.id),
-      username: user.username || user.name || "Admin",
+      username: user.username || user.name || user.activeProfileName || "Admin",
       avatar: avatarToUse,
       content: content.trim(),
     },

@@ -50,14 +50,21 @@ export default function ProfilPage() {
 
   async function setActive(id: number) {
     await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, setActive: true }) });
-    await updateSession();
-    loadProfiles();
+    // Aktif profilin bilgilerini al
+    const updated = profiles.find(p => p.id === id);
+    if (updated) {
+      await updateSession({ avatar: updated.avatar || null, activeProfileName: updated.name });
+    }
+    router.push("/");
   }
 
   async function saveAvatar(profileId: number, avatarUrl: string) {
     setSaving(true);
     await fetch("/api/profiles", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: profileId, avatar: avatarUrl }) });
-    await updateSession();
+    const p = profiles.find(x => x.id === profileId);
+    if (p?.isActive) {
+      await updateSession({ avatar: avatarUrl, activeProfileName: p.name });
+    }
     loadProfiles();
     setView("select");
     setEditingProfile(null);

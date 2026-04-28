@@ -25,7 +25,8 @@ function timeAgo(date: string) {
 
 export default function Comments({ chapterId }: { chapterId: number }) {
   const { data: session } = useSession();
-  const user = session?.user as { id?: string; role?: string; username?: string; name?: string } | undefined;
+  const user = session?.user as { id?: string; role?: string; username?: string; name?: string; activeProfileName?: string } | undefined;
+  const displayName = user?.activeProfileName || user?.username || user?.name || "?";
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState("");
@@ -81,7 +82,7 @@ export default function Comments({ chapterId }: { chapterId: number }) {
         <form onSubmit={handleSubmit} style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <div style={{ width: 36, height: 36, borderRadius: "50%", overflow: "hidden", flexShrink: 0, border: "2px solid var(--border2)", background: "var(--card2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "var(--accent3)" }}>
-              {(user?.username || user?.name || "?")[0].toUpperCase()}
+              {displayName[0].toUpperCase()}
             </div>
             <div style={{ flex: 1 }}>
               <textarea
