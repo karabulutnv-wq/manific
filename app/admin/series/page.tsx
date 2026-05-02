@@ -97,7 +97,7 @@ export default function SeriesPage() {
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={S.label}>Kapak Görseli</label>
-              <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { setCoverFile(f); setCoverPreview(URL.createObjectURL(f)); } }} style={{ fontSize: 13, color: "var(--text2)" }} />
+              <input type="file" accept="image/*,.avif" onChange={e => { const f = e.target.files?.[0]; if (f) { setCoverFile(f); setCoverPreview(URL.createObjectURL(f)); } }} style={{ fontSize: 13, color: "var(--text2)" }} />
               {coverPreview && (
                 <div style={{ position: "relative", width: 72, height: 100, borderRadius: 8, overflow: "hidden", marginTop: 10, border: "1px solid var(--border2)" }}>
                   <Image src={coverPreview} alt="preview" fill style={{ objectFit: "cover" }} />

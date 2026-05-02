@@ -78,7 +78,7 @@ export default function AvatarsPage() {
         >
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,.avif"
             multiple
             onChange={handleFiles}
             className="hidden"

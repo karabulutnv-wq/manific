@@ -12,7 +12,7 @@ const S = {
   label: { display: "block", fontSize: 11, fontWeight: 600, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: "0.05em" },
 };
 
-const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "gif"];
+const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp", "gif", "avif"];
 
 export default function ChaptersPage() {
   const [mangas, setMangas] = useState<Manga[]>([]);
@@ -192,7 +192,7 @@ export default function ChaptersPage() {
                     <div style={{ marginBottom: 14 }}>
                       <label style={S.label}>Sayfa Görselleri * ({pages.length} dosya)</label>
                       <div style={{ border: `2px dashed ${pages.length ? "var(--accent3)" : "var(--border2)"}`, borderRadius: 10, padding: "20px", textAlign: "center" }}>
-                        <input type="file" accept="image/*" multiple onChange={e => setPages(Array.from(e.target.files || []))} id="pg" style={{ display: "none" }} />
+                        <input type="file" accept="image/*,.avif" multiple onChange={e => setPages(Array.from(e.target.files || []))} id="pg" style={{ display: "none" }} />
                         <label htmlFor="pg" style={{ cursor: "pointer" }}>
                           <p style={{ fontSize: 22, marginBottom: 6 }}>🖼️</p>
                           <p style={{ fontSize: 13, fontWeight: 500, color: pages.length ? "var(--accent3)" : "var(--text2)" }}>
