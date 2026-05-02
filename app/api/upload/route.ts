@@ -9,6 +9,22 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+async function uploadOne(buffer: Buffer, folder: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: `manific/${folder}`,
+        resource_type: "image",
+        allowed_formats: ["jpg", "jpeg", "png", "webp", "gif", "avif"],
+      },
+      (err, res) => {
+        if (err || !res) reject(err);
+        else resolve(res.secure_url);
+      }
+    ).end(buffer);
+  });
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,26 +35,16 @@ export async function POST(req: NextRequest) {
 
   if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
 
-  // Process max 10 files per request to avoid Vercel 4.5MB limit
-  const batch = files.slice(0, 10);
-  const urls: string[] = [];
+  // Max 5 per request, upload in parallel
+  const batch = files.slice(0, 5);
 
-  for (const file of batch) {
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+  const results = await Promise.all(
+    batch.map(async (file) => {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      return uploadOne(buffer, folder);
+    })
+  );
 
-    const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: `manific/${folder}`, resource_type: "image" },
-        (err, res) => {
-          if (err || !res) reject(err);
-          else resolve(res as { secure_url: string });
-        }
-      ).end(buffer);
-    });
-
-    urls.push(result.secure_url);
-  }
-
-  return NextResponse.json({ urls });
+  return NextResponse.json({ urls: results });
 }
