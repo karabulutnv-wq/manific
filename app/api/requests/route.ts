@@ -71,3 +71,21 @@ export async function POST(req: NextRequest) {
     db.close();
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { role?: string } | undefined;
+  if (!session || user?.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await req.json();
+  const db = getDb();
+  try {
+    await db.execute({ sql: "DELETE FROM MangaRequestVote WHERE requestId = ?", args: [id] });
+    await db.execute({ sql: "DELETE FROM MangaRequest WHERE id = ?", args: [id] });
+    return NextResponse.json({ success: true });
+  } finally {
+    db.close();
+  }
+}

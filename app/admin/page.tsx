@@ -7,6 +7,7 @@ const cards = [
   { href: "/admin/chapters", icon: "📄", label: "Bölüm Yönetimi", desc: "Bölüm ekle, sayfaları yükle", color: "#10b981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.25)" },
   { href: "/admin/avatars", icon: "🖼️", label: "Avatar Yönetimi", desc: "Kullanıcı avatarlarını yönet", color: "#f97316", bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.25)" },
   { href: "/admin/istatistik", icon: "📊", label: "İstatistikler", desc: "Ziyaretçi ve trafik verileri", color: "#06b6d4", bg: "rgba(6,182,212,0.12)", border: "rgba(6,182,212,0.25)" },
+  { href: "/admin/ban", icon: "🚫", label: "IP Ban", desc: "IP yasakla ve yönet", color: "#ef4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.25)" },
 ];
 
 export default function AdminDashboard() {

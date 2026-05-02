@@ -13,6 +13,8 @@ interface MangaRequest {
 export default function IsteklerPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const user = session?.user as { role?: string } | undefined;
+  const isAdmin = user?.role === "admin";
   const [requests, setRequests] = useState<MangaRequest[]>([]);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -49,6 +51,16 @@ export default function IsteklerPage() {
     if (!r.ok) { setError(data.error || "Hata oluştu"); setLoading(false); return; }
 
     setTitle(""); setDesc(""); setShowForm(false); setLoading(false);
+    load();
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm("Bu isteği silmek istediğine emin misin?")) return;
+    await fetch("/api/requests", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
     load();
   }
 
@@ -199,6 +211,16 @@ export default function IsteklerPage() {
                       {req.requestedByName} tarafından · {new Date(req.createdAt).toLocaleDateString("tr-TR")}
                     </p>
                   </div>
+
+                  {/* Admin delete */}
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDelete(req.id)}
+                      style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, background: "rgba(239,68,68,0.1)", color: "var(--red)", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", flexShrink: 0 }}
+                    >
+                      Sil
+                    </button>
+                  )}
                 </div>
               );
             })
