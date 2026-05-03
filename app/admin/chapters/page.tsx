@@ -83,8 +83,13 @@ export default function ChaptersPage() {
       const fd = new FormData();
       chunk.forEach(f => fd.append("files", f));
       fd.append("folder", `chapters/${sel!.slug}/${num}`);
-      const { urls } = await (await fetch("/api/upload", { method: "POST", body: fd })).json();
-      allUrls.push(...urls);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || `Upload hatası: ${res.status}`);
+      }
+      const { urls } = await res.json();
+      allUrls.push(...(urls || []));
     }
     return allUrls;
   }
@@ -97,24 +102,44 @@ export default function ChaptersPage() {
 
     setLoading(true);
 
-    let filesToUpload = pages;
-    if (uploadMode === "zip") {
-      setProgress("ZIP dosyası açılıyor...");
-      filesToUpload = await extractZipToFiles();
+    try {
+      let filesToUpload = pages;
+      if (uploadMode === "zip") {
+        setProgress("ZIP dosyası açılıyor...");
+        filesToUpload = await extractZipToFiles();
+      }
+
+      const allUrls = await uploadPages(filesToUpload);
+
+      if (allUrls.length === 0) {
+        setProgress("Hata: Dosyalar yüklenemedi!");
+        setLoading(false);
+        return;
+      }
+
+      setProgress("Bölüm kaydediliyor...");
+      const chapterRes = await fetch("/api/chapters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mangaId: sel.id, number: parseFloat(num), title: title || undefined, pages: allUrls }),
+      });
+
+      if (!chapterRes.ok) {
+        const err = await chapterRes.json();
+        setProgress(`Hata: ${err.error || "Bölüm kaydedilemedi"}`);
+        setLoading(false);
+        return;
+      }
+
+      setNum(""); setTitle(""); setPages([]); setZipFile(null); setZipPreview([]);
+      setProgress("✓ Bölüm başarıyla eklendi!");
+      setTimeout(() => setProgress(""), 3000);
+      loadChapters(sel);
+    } catch (err) {
+      setProgress(`Hata: ${err instanceof Error ? err.message : "Bilinmeyen hata"}`);
+    } finally {
+      setLoading(false);
     }
-
-    const allUrls = await uploadPages(filesToUpload);
-
-    setProgress("Bölüm kaydediliyor...");
-    await fetch("/api/chapters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mangaId: sel.id, number: parseFloat(num), title: title || undefined, pages: allUrls }),
-    });
-
-    setNum(""); setTitle(""); setPages([]); setZipFile(null); setZipPreview([]);
-    setProgress(""); setLoading(false);
-    loadChapters(sel);
   }
 
   async function delChapter(id: number) {
@@ -244,8 +269,12 @@ export default function ChaptersPage() {
 
                   {progress && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                      <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid var(--accent3)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
-                      <p style={{ fontSize: 12, color: "var(--accent3)" }}>{progress}</p>
+                      {!progress.startsWith("Hata") && !progress.startsWith("✓") && (
+                        <div style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid var(--accent3)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
+                      )}
+                      <p style={{ fontSize: 12, color: progress.startsWith("Hata") ? "var(--red)" : progress.startsWith("✓") ? "var(--green)" : "var(--accent3)" }}>
+                        {progress}
+                      </p>
                     </div>
                   )}
 
