@@ -32,7 +32,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Doğrulama kodu bulunamadı. Tekrar gönder." }, { status: 400 });
     }
 
-    const { code: savedCode, expiresAt } = verify.rows[0] as { code: string; expiresAt: string };
+    const row = verify.rows[0] as unknown as { code: string; expiresAt: string };
+    const { code: savedCode, expiresAt } = row;
 
     if (new Date(expiresAt) < new Date()) {
       return NextResponse.json({ error: "Doğrulama kodu süresi dolmuş. Tekrar gönder." }, { status: 400 });
