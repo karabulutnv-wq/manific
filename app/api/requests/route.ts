@@ -89,3 +89,28 @@ export async function DELETE(req: NextRequest) {
     db.close();
   }
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  const user = session?.user as { role?: string } | undefined;
+  if (!session || user?.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id, status } = await req.json();
+  const validStatuses = ["pending", "approved", "rejected", "added"];
+  if (!validStatuses.includes(status)) {
+    return NextResponse.json({ error: "Geçersiz durum" }, { status: 400 });
+  }
+
+  const db = getDb();
+  try {
+    await db.execute({
+      sql: "UPDATE MangaRequest SET status = ? WHERE id = ?",
+      args: [status, id],
+    });
+    return NextResponse.json({ success: true });
+  } finally {
+    db.close();
+  }
+}

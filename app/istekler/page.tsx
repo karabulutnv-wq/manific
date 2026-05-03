@@ -64,6 +64,15 @@ export default function IsteklerPage() {
     load();
   }
 
+  async function handleStatus(id: number, status: string) {
+    await fetch("/api/requests", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status }),
+    });
+    load();
+  }
+
   async function handleVote(req: MangaRequest) {
     if (!session) { router.push("/giris"); return; }
     setVotingId(req.id);
@@ -212,14 +221,48 @@ export default function IsteklerPage() {
                     </p>
                   </div>
 
-                  {/* Admin delete */}
+                  {/* Admin controls */}
                   {isAdmin && (
-                    <button
-                      onClick={() => handleDelete(req.id)}
-                      style={{ padding: "6px 12px", borderRadius: 8, fontSize: 12, background: "rgba(239,68,68,0.1)", color: "var(--red)", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", flexShrink: 0 }}
-                    >
-                      Sil
-                    </button>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
+                      {req.status !== "added" && (
+                        <button
+                          onClick={() => handleStatus(req.id, "added")}
+                          style={{ padding: "5px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700, background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)", cursor: "pointer", whiteSpace: "nowrap" }}
+                        >
+                          ✓ Eklendi
+                        </button>
+                      )}
+                      {req.status !== "approved" && req.status !== "added" && (
+                        <button
+                          onClick={() => handleStatus(req.id, "approved")}
+                          style={{ padding: "5px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700, background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.25)", cursor: "pointer", whiteSpace: "nowrap" }}
+                        >
+                          👍 Onayla
+                        </button>
+                      )}
+                      {req.status !== "rejected" && (
+                        <button
+                          onClick={() => handleStatus(req.id, "rejected")}
+                          style={{ padding: "5px 10px", borderRadius: 7, fontSize: 11, fontWeight: 700, background: "rgba(239,68,68,0.08)", color: "var(--red)", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", whiteSpace: "nowrap" }}
+                        >
+                          ✕ Reddet
+                        </button>
+                      )}
+                      {req.status !== "pending" && (
+                        <button
+                          onClick={() => handleStatus(req.id, "pending")}
+                          style={{ padding: "5px 10px", borderRadius: 7, fontSize: 11, background: "var(--card2)", color: "var(--muted)", border: "1px solid var(--border2)", cursor: "pointer", whiteSpace: "nowrap" }}
+                        >
+                          ↩ Beklet
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(req.id)}
+                        style={{ padding: "5px 10px", borderRadius: 7, fontSize: 11, background: "rgba(239,68,68,0.06)", color: "var(--red)", border: "1px solid rgba(239,68,68,0.15)", cursor: "pointer" }}
+                      >
+                        🗑 Sil
+                      </button>
+                    </div>
                   )}
                 </div>
               );
