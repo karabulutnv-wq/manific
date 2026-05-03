@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
 
   if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
 
-  // Max 1 file per request for large AVIF files
-  const batch = files.slice(0, 1);
+  // Max 10 files per request
+  const batch = files.slice(0, 10);
 
   const results = await Promise.all(
     batch.map(async (file) => {

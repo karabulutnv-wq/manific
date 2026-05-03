@@ -76,11 +76,12 @@ export default function ChaptersPage() {
 
   async function uploadPages(filesToUpload: File[]): Promise<string[]> {
     const allUrls: string[] = [];
-    // Her dosyayı tek tek yükle — AVIF dosyaları büyük olduğu için
-    for (let i = 0; i < filesToUpload.length; i++) {
-      setProgress(`Yükleniyor... (${i + 1}/${filesToUpload.length})`);
+    const chunkSize = 10;
+    for (let i = 0; i < filesToUpload.length; i += chunkSize) {
+      const chunk = filesToUpload.slice(i, i + chunkSize);
+      setProgress(`Yükleniyor... (${Math.min(i + chunkSize, filesToUpload.length)}/${filesToUpload.length})`);
       const fd = new FormData();
-      fd.append("files", filesToUpload[i]);
+      chunk.forEach(f => fd.append("files", f));
       fd.append("folder", `chapters/${sel!.slug}/${num}`);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) {
