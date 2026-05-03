@@ -4,6 +4,7 @@ import Link from "next/link";
 import ChapterReader from "@/components/ChapterReader";
 import Comments from "@/components/Comments";
 import { ReadLimitBlocker } from "@/components/ReadLimit";
+import ReaderWrapper from "@/components/ReaderWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export default async function ChapterPage({
       </div>
 
       {/* Pages */}
-      <ChapterReader pages={pages} />
+      <ReaderWrapper pages={pages} />
 
       {/* Bottom nav */}
       <div style={{ display: "flex", justifyContent: "center", gap: 12, padding: "24px 20px" }}>
